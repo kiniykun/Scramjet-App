@@ -1,20 +1,8 @@
-FROM node:18-alpine
-
-ENV NODE_ENV=production
-ARG NPM_BUILD="npm install --omit=dev"
+ FROM node:22-alpine
 EXPOSE 8080/tcp
-
-LABEL maintainer="Mercury Workshop"
-LABEL summary="Scramjet Demo Image"
-LABEL description="Example application of Scramjet"
-
 WORKDIR /app
-
-COPY ["package.json", "package-lock.json", "./"]
-RUN apk add --upgrade --no-cache python3 make g++
-RUN $NPM_BUILD
-
+RUN apk add --no-cache python3 make g++ && npm install -g pnpm
 COPY . .
-
-ENTRYPOINT [ "node" ]
-CMD ["src/index.js"]
+RUN pnpm install --frozen-lockfile
+ENV NODE_ENV=production
+CMD ["pnpm", "start"]
