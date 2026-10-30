@@ -1,16 +1,21 @@
 <!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Loading</title>
-<style>html,body{margin:0;height:100%;background:#0b0606;color:#b3a09a;font:14px system-ui,sans-serif}#msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}</style>
-<script src="/scram/scramjet.all.js"></script>
-<script src="/baremux/index.js"></script>
+<style>html,body{margin:0;height:100%;background:#0b0606;color:#b3a09a;font:14px system-ui,sans-serif}#msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;white-space:pre-wrap}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}</style>
 </head><body><div id="msg">Starting proxy... the first load can take up to a minute.</div>
 <script>
+function load(src){return new Promise(function(r){var s=document.createElement("script");s.src=src;s.onload=function(){r(true)};s.onerror=function(){r(false)};document.head.appendChild(s);});}
 (async()=>{
- const msg=document.getElementById("msg");
+ const msg=document.getElementById("msg"), log=[];
  try{
   const target=new URLSearchParams(location.search).get("url");
   if(!target){msg.textContent="No address given.";return;}
+  log.push("baremux "+await load("/baremux/index.js"));
+  for(const f of ["/scram/scramjet.all.js","/scram/scramjet.controller.js","/scram/scramjet.bundle.js","/scram/controller.api.js","/scram/scramjet.js"]){
+   const ok=await load(f); log.push(f+" "+ok);
+   if(typeof $scramjetLoadController==="function")break;
+  }
+  if(typeof $scramjetLoadController!=="function")throw new Error("controller not found\n"+log.join("\n"));
   const {ScramjetController}=$scramjetLoadController();
   const scramjet=new ScramjetController({files:{wasm:"/scram/scramjet.wasm.wasm",all:"/scram/scramjet.all.js",sync:"/scram/scramjet.sync.js"}});
   await scramjet.init();
